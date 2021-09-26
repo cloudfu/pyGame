@@ -89,7 +89,7 @@ class ui_board:
         self.next_player()
 
         # 当前棋盘已落子状态
-        self.board_play_data = [[None for i in range(CHESS_COUNT)] for i in range(CHESS_COUNT)]
+        self.board_chess_map = [[None for i in range(CHESS_COUNT)] for i in range(CHESS_COUNT)]
 
         # 已经落子历史记录
         self.played_chess_history = []
@@ -128,37 +128,124 @@ class ui_board:
         当前棋局落子数据打印
         """
         print("当前棋局情况：")
-        for i in range(len(self.board_play_data)):
-            for j in range(len(self.board_play_data[i])):
-                if self.board_play_data[i][j] is None:
+        for i in range(len(self.board_chess_map)):
+            for j in range(len(self.board_chess_map[i])):
+                if self.board_chess_map[i][j] is None:
                     print(EMPTY_CHESS_CHAR, end='\t')
-                elif isinstance(self.board_play_data[i][j], chess) and self.board_play_data[i][j].player == chess_player.black_player:
+                elif isinstance(self.board_chess_map[i][j], chess) and self.board_chess_map[i][
+                    j].player == chess_player.black_player:
                     print(BLACK_CHESS_CHAR, end='\t')
-                elif isinstance(self.board_play_data[i][j], chess) and self.board_play_data[i][j].player == chess_player.white_player:
+                elif isinstance(self.board_chess_map[i][j], chess) and self.board_chess_map[i][
+                    j].player == chess_player.white_player:
                     print(WHITE_CHESS_CHAR, end='\t')
 
             print()
 
-    def check_winner(self):
+    def check_win(self, current_chess):
         """
-        判断当前棋局是否获胜
+        判断当前棋局是否获胜,使用最新落子的位置向外延伸
         :return:
         """
-        # 四个方向计数 横 竖 左斜 右斜
-        # directions = [[(-1, 0), (1, 0)],
-        #               [(0, -1), (0, 1)],
-        #               [(-1, 1), (1, -1)],
-        #               [(-1, -1), (1, 1)]]
-        #
-        # for axis in directions:
-        #     axis_count = 1
-        #     for (xdirection, ydirection) in axis:
-        #         axis_count += self.count_on_direction(i, j, xdirection, ydirection, color)
-        #         if axis_count >= 5:
-        #             return True
+        x_direction = 0
+        y_direction = 1
+        z_direction = 2
+
+        # 横向校验
+        self.calc_horizontal_link_count(self.current_player)
+        self.calc_vertical_link_count(self.current_player)
 
         return False
 
+    # def calc_45_link_count(self, current_chess):
+    #     """
+    #     计算斜角连接数量
+    #     :param current_chess:
+    #     """
+    #     count_link = 1
+    #     go_up = True
+    #     go_down = True
+    #
+    #     # 扫描最小边界设定
+    #     if 4 < current_chess.y < CHESS_COUNT - 4:
+    #         for step in range(1, 5):
+    #             chess_up = self.board_chess_map[current_chess.y - step][current_chess.x]
+    #
+    #             # 当前位置向上扫描
+    #             if isinstance(chess_up, chess) and chess_up.color == current_chess.color and go_up:
+    #                 count_link += 1
+    #             else:
+    #                 go_up = False
+    #
+    #             # 当前位置向下扫描
+    #             chess_down = self.board_chess_map[current_chess.y][current_chess.x + step]
+    #             if isinstance(chess_down, chess) and chess_down.color == current_chess.color and go_down:
+    #                 count_link += 1
+    #             else:
+    #                 go_down = False
+    #
+    #     return count_link
+
+    def calc_vertical_link_count(self, current_chess):
+        """
+        计算垂直连接数量
+        :param current_chess:
+        """
+        count_link = 1
+
+        # 向上最小边界设定
+        if 4 < current_chess.y:
+            # 当前位置向上扫描
+            for step in range(1, 5):
+                chess_up = self.board_chess_map[current_chess.y - step][current_chess.x]
+                if isinstance(chess_up, chess) and chess_up.color == current_chess.color:
+                    count_link += 1
+                else:
+                    break
+
+        # 向下最小边界设定
+        if current_chess.y < CHESS_COUNT - 4:
+            for step in range(1, 5):
+                # 当前位置向下扫描
+                chess_down = self.board_chess_map[current_chess.y][current_chess.x + step]
+                if isinstance(chess_down, chess) and chess_down.color == current_chess.color:
+                    count_link += 1
+                else:
+                    break
+
+        print(" 垂直扫描:" + str(count_link))
+        return count_link
+
+    def calc_horizontal_link_count(self, current_chess):
+        """
+        计算横向连接数量
+        :param current_chess:
+        :return:
+        """
+        # 横向检索连接数量
+        count_link = 1
+
+        # 向左最小边界设定
+        if 4 < current_chess.x:
+            for step in range(1, 5):
+                chess_left = self.board_chess_map[current_chess.y][current_chess.x - step]
+                # 当前位置向左扫描
+                if isinstance(chess_left, chess) and chess_left.color == current_chess.color:
+                    count_link += 1
+                else:
+                    break
+
+        # 向右最小边界设定
+        if current_chess.x < CHESS_COUNT - 4:
+            for step in range(1, 5):
+                # 当前位置向右扫描
+                chess_right = self.board_chess_map[current_chess.y][current_chess.x + step]
+                if isinstance(chess_right, chess) and chess_right.color == current_chess.color:
+                    count_link += 1
+                else:
+                    break
+
+        print(str(self.current_player.player) + " 水平扫描:" + str(count_link), end='\t')
+        return count_link
 
     def draw_board(self):
         """
@@ -174,9 +261,6 @@ class ui_board:
                 if event.type == pygame.MOUSEBUTTONUP:
                     # 绘制棋子
                     self.calc_chess_position()
-
-                    # 检测是否已经获胜
-                    self.check_winner()
 
             # 绘制棋盘背景色
             self.screen.fill(BOARD_BACKGROUND)
@@ -203,16 +287,24 @@ class ui_board:
             # 绘制4*4点
             x = 4
             y = 4
-            pygame.draw.rect(self.screen, BOARD_LINE_COLOR, ((x * CHESS_SIZE + BROAD_MARGE_SPACE - 3, y * CHESS_SIZE + BROAD_MARGE_SPACE - 3), (8, 8)), 0)
+            pygame.draw.rect(self.screen, BOARD_LINE_COLOR,
+                             ((x * CHESS_SIZE + BROAD_MARGE_SPACE - 3, y * CHESS_SIZE + BROAD_MARGE_SPACE - 3), (8, 8)),
+                             0)
             x = 10
             y = 4
-            pygame.draw.rect(self.screen, BOARD_LINE_COLOR, ((x * CHESS_SIZE + BROAD_MARGE_SPACE - 3, y * CHESS_SIZE + BROAD_MARGE_SPACE - 3), (8, 8)), 0)
+            pygame.draw.rect(self.screen, BOARD_LINE_COLOR,
+                             ((x * CHESS_SIZE + BROAD_MARGE_SPACE - 3, y * CHESS_SIZE + BROAD_MARGE_SPACE - 3), (8, 8)),
+                             0)
             x = 4
             y = 10
-            pygame.draw.rect(self.screen, BOARD_LINE_COLOR, ((x * CHESS_SIZE + BROAD_MARGE_SPACE - 3, y * CHESS_SIZE + BROAD_MARGE_SPACE - 3), (8, 8)), 0)
+            pygame.draw.rect(self.screen, BOARD_LINE_COLOR,
+                             ((x * CHESS_SIZE + BROAD_MARGE_SPACE - 3, y * CHESS_SIZE + BROAD_MARGE_SPACE - 3), (8, 8)),
+                             0)
             x = 10
             y = 10
-            pygame.draw.rect(self.screen, BOARD_LINE_COLOR, ((x * CHESS_SIZE + BROAD_MARGE_SPACE - 3, y * CHESS_SIZE + BROAD_MARGE_SPACE - 3), (8, 8)), 0)
+            pygame.draw.rect(self.screen, BOARD_LINE_COLOR,
+                             ((x * CHESS_SIZE + BROAD_MARGE_SPACE - 3, y * CHESS_SIZE + BROAD_MARGE_SPACE - 3), (8, 8)),
+                             0)
 
             # 绘制已经落子的棋子
             for chess_done in self.played_chess_history:
@@ -245,6 +337,10 @@ class ui_board:
         if 0 <= x_cell < CHESS_COUNT and 0 <= y_cell < CHESS_COUNT:
             # 确认落子无误，更换下一位玩家
             if self.make_chess_position(x_cell, y_cell):
+                # 检测是否已经获胜
+                self.check_win(self.current_player)
+
+                # 切换玩家
                 self.next_player()
 
     def make_chess_position(self, x_cell, y_cell):
@@ -266,10 +362,10 @@ class ui_board:
                 # 加入棋谱数据
                 # 二维数据第一维度是Y轴，第二维度是X轴
                 # 打印是按照使用二维数组作为X轴进行打印，所以需要进行X、Y轴倒置处理
-                self.board_play_data[self.current_player.y][self.current_player.x] = self.current_player
+                self.board_chess_map[self.current_player.y][self.current_player.x] = self.current_player
 
                 # 当前棋局数据打印
-                self.print_board_play_data()
+                # self.print_board_play_data()
                 result = True
 
         return result
