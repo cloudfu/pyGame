@@ -36,6 +36,8 @@ EMPTY_CHESS_CHAR = "x"
 
 # endregion
 
+# region 玩家
+
 @unique
 class chess_player(Enum):
     """
@@ -44,6 +46,10 @@ class chess_player(Enum):
     black_player = 10
     white_player = 20
 
+
+# endregion
+
+# region 棋子类
 
 class chess:
     """
@@ -75,6 +81,10 @@ class chess:
         print(str(self.player) + " x：" + str(self.x) + " y:" + str(self.y))
 
 
+# endregion
+
+# region 棋盘
+
 class ui_board:
     """
     绘制五子棋盘
@@ -97,6 +107,21 @@ class ui_board:
         # 棋盘刷新
         self.draw_board()
 
+    # region 基础属性、方法
+    def is_empty_cell(self, x, y):
+        """
+        获得当前格子的状态
+        """
+        is_empty = True
+        for cell in self.played_chess_history:
+            if cell.x == x and cell.y == y:
+                is_empty = False
+                break
+        return is_empty
+
+    # endregion
+
+    # region 游戏中更换玩家
     def next_player(self):
         """
         更换下一位棋手
@@ -112,34 +137,9 @@ class ui_board:
 
         return self.current_player
 
-    def is_empty_cell(self, x, y):
-        """
-        获得当前格子的状态
-        """
-        is_empty = True
-        for cell in self.played_chess_history:
-            if cell.x == x and cell.y == y:
-                is_empty = False
-                break
-        return is_empty
+    # endregion
 
-    def print_board_play_data(self):
-        """
-        当前棋局落子数据打印
-        """
-        print("当前棋局情况：")
-        for i in range(len(self.board_chess_map)):
-            for j in range(len(self.board_chess_map[i])):
-                if self.board_chess_map[i][j] is None:
-                    print(EMPTY_CHESS_CHAR, end='\t')
-                elif isinstance(self.board_chess_map[i][j], chess) and self.board_chess_map[i][
-                    j].player == chess_player.black_player:
-                    print(BLACK_CHESS_CHAR, end='\t')
-                elif isinstance(self.board_chess_map[i][j], chess) and self.board_chess_map[i][
-                    j].player == chess_player.white_player:
-                    print(WHITE_CHESS_CHAR, end='\t')
-
-            print()
+    # region  计算连五胜利结果
 
     def check_win(self, current_chess):
         """
@@ -284,6 +284,10 @@ class ui_board:
         print(str(self.current_player.player) + " 水平扫描:" + str(count_link), end='\t')
         return count_link
 
+    # endregion
+
+    # region 绘制棋盘、棋子
+
     def draw_board(self):
         """
         绘制棋盘
@@ -364,6 +368,10 @@ class ui_board:
             if event.type != pygame.QUIT:
                 pygame.display.update()
 
+    # endregion
+
+    # region 计算落子位置和数据刷新
+
     def calc_chess_position(self):
         """
         检查落子动作和计算落子位置
@@ -413,6 +421,28 @@ class ui_board:
 
         return result
 
+    def print_board_play_data(self):
+        """
+        当前棋局落子数据打印
+        """
+        print("当前棋局情况：")
+        for i in range(len(self.board_chess_map)):
+            for j in range(len(self.board_chess_map[i])):
+                if self.board_chess_map[i][j] is None:
+                    print(EMPTY_CHESS_CHAR, end='\t')
+                elif isinstance(self.board_chess_map[i][j], chess) and self.board_chess_map[i][
+                    j].player == chess_player.black_player:
+                    print(BLACK_CHESS_CHAR, end='\t')
+                elif isinstance(self.board_chess_map[i][j], chess) and self.board_chess_map[i][
+                    j].player == chess_player.white_player:
+                    print(WHITE_CHESS_CHAR, end='\t')
+
+            print()
+
+    # endregion
+
+
+# endregion
 
 if __name__ == "__main__":
     ui_board()
