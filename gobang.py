@@ -146,44 +146,81 @@ class ui_board:
         判断当前棋局是否获胜,使用最新落子的位置向外延伸
         :return:
         """
-        x_direction = 0
-        y_direction = 1
-        z_direction = 2
 
-        # 横向校验
-        self.calc_horizontal_link_count(self.current_player)
-        self.calc_vertical_link_count(self.current_player)
+        winner = None
+        # 五连接校验
+        if self.calc_horizontal_link_count(self.current_player) == 5 \
+                or self.calc_vertical_link_count(self.current_player) == 5 \
+                or self.calc_45_link_count(self.current_player) == 5 \
+                or self.calc_135_link_count(self.current_player) == 5:
+            winner = self.current_player
+            print("winner is :" + str(winner.player))
 
-        return False
+        return winner
 
-    # def calc_45_link_count(self, current_chess):
-    #     """
-    #     计算斜角连接数量
-    #     :param current_chess:
-    #     """
-    #     count_link = 1
-    #     go_up = True
-    #     go_down = True
-    #
-    #     # 扫描最小边界设定
-    #     if 4 < current_chess.y < CHESS_COUNT - 4:
-    #         for step in range(1, 5):
-    #             chess_up = self.board_chess_map[current_chess.y - step][current_chess.x]
-    #
-    #             # 当前位置向上扫描
-    #             if isinstance(chess_up, chess) and chess_up.color == current_chess.color and go_up:
-    #                 count_link += 1
-    #             else:
-    #                 go_up = False
-    #
-    #             # 当前位置向下扫描
-    #             chess_down = self.board_chess_map[current_chess.y][current_chess.x + step]
-    #             if isinstance(chess_down, chess) and chess_down.color == current_chess.color and go_down:
-    #                 count_link += 1
-    #             else:
-    #                 go_down = False
-    #
-    #     return count_link
+    def calc_135_link_count(self, current_chess):
+        """
+        计算斜角连接数量
+        :param current_chess:
+        """
+        count_link = 1
+
+        # 当前位置45向上
+        for step in range(1, 5):
+            x = current_chess.x - step
+            y = current_chess.y - step
+            if x > 0 and y >= 0:
+                chess_up = self.board_chess_map[y][x]
+                if isinstance(chess_up, chess) and chess_up.color == current_chess.color:
+                    count_link += 1
+                else:
+                    break
+
+        # 当前位置45向下
+        for step in range(1, 5):
+            x = current_chess.x + step
+            y = current_chess.y + step
+            if x < CHESS_COUNT and y < CHESS_COUNT:
+                chess_down = self.board_chess_map[y][x]
+                if isinstance(chess_down, chess) and chess_down.color == current_chess.color:
+                    count_link += 1
+                else:
+                    break
+
+        print(" 135度扫描:" + str(count_link))
+        return count_link
+
+    def calc_45_link_count(self, current_chess):
+        """
+        计算斜角连接数量
+        :param current_chess:
+        """
+        count_link = 1
+
+        # 当前位置45向上
+        for step in range(1, 5):
+            x = current_chess.x + step
+            y = current_chess.y - step
+            if x < CHESS_COUNT and y >= 0:
+                chess_up = self.board_chess_map[y][x]
+                if isinstance(chess_up, chess) and chess_up.color == current_chess.color:
+                    count_link += 1
+                else:
+                    break
+
+        # 当前位置45向下
+        for step in range(1, 5):
+            x = current_chess.x - step
+            y = current_chess.y + step
+            if x >= 0 and y < CHESS_COUNT:
+                chess_down = self.board_chess_map[y][x]
+                if isinstance(chess_down, chess) and chess_down.color == current_chess.color:
+                    count_link += 1
+                else:
+                    break
+
+        print(" 45度扫描:" + str(count_link), end='\t')
+        return count_link
 
     def calc_vertical_link_count(self, current_chess):
         """
@@ -192,27 +229,27 @@ class ui_board:
         """
         count_link = 1
 
-        # 向上最小边界设定
-        if 4 < current_chess.y:
-            # 当前位置向上扫描
-            for step in range(1, 5):
-                chess_up = self.board_chess_map[current_chess.y - step][current_chess.x]
+        # 当前位置向上扫描
+        for step in range(1, 5):
+            y = current_chess.y - step
+            if y >= 0:
+                chess_up = self.board_chess_map[y][current_chess.x]
                 if isinstance(chess_up, chess) and chess_up.color == current_chess.color:
                     count_link += 1
                 else:
                     break
 
-        # 向下最小边界设定
-        if current_chess.y < CHESS_COUNT - 4:
-            for step in range(1, 5):
-                # 当前位置向下扫描
-                chess_down = self.board_chess_map[current_chess.y][current_chess.x + step]
+        # 当前位置向下扫描
+        for step in range(1, 5):
+            y = current_chess.y + step
+            if y < CHESS_COUNT:
+                chess_down = self.board_chess_map[y][current_chess.x]
                 if isinstance(chess_down, chess) and chess_down.color == current_chess.color:
                     count_link += 1
                 else:
                     break
 
-        print(" 垂直扫描:" + str(count_link))
+        print(" 垂直扫描:" + str(count_link), end='\t')
         return count_link
 
     def calc_horizontal_link_count(self, current_chess):
@@ -224,20 +261,20 @@ class ui_board:
         # 横向检索连接数量
         count_link = 1
 
-        # 向左最小边界设定
-        if 4 < current_chess.x:
-            for step in range(1, 5):
-                chess_left = self.board_chess_map[current_chess.y][current_chess.x - step]
-                # 当前位置向左扫描
+        # 当前位置向左扫描
+        for step in range(1, 5):
+            x = current_chess.x - step
+            if x >= 0:
+                chess_left = self.board_chess_map[current_chess.y][x]
                 if isinstance(chess_left, chess) and chess_left.color == current_chess.color:
                     count_link += 1
                 else:
                     break
 
-        # 向右最小边界设定
-        if current_chess.x < CHESS_COUNT - 4:
-            for step in range(1, 5):
-                # 当前位置向右扫描
+        # 当前位置向右扫描
+        for step in range(1, 5):
+            y = current_chess.x + step
+            if y < CHESS_COUNT:
                 chess_right = self.board_chess_map[current_chess.y][current_chess.x + step]
                 if isinstance(chess_right, chess) and chess_right.color == current_chess.color:
                     count_link += 1
@@ -285,23 +322,29 @@ class ui_board:
                                  (CHESS_SIZE * (CHESS_COUNT - 1) + BROAD_MARGE_SPACE, y + BROAD_MARGE_SPACE), width)
 
             # 绘制4*4点
-            x = 4
-            y = 4
+            x = 7
+            y = 7
             pygame.draw.rect(self.screen, BOARD_LINE_COLOR,
                              ((x * CHESS_SIZE + BROAD_MARGE_SPACE - 3, y * CHESS_SIZE + BROAD_MARGE_SPACE - 3), (8, 8)),
                              0)
-            x = 10
-            y = 4
+
+            x = 3
+            y = 3
             pygame.draw.rect(self.screen, BOARD_LINE_COLOR,
                              ((x * CHESS_SIZE + BROAD_MARGE_SPACE - 3, y * CHESS_SIZE + BROAD_MARGE_SPACE - 3), (8, 8)),
                              0)
-            x = 4
-            y = 10
+            x = 11
+            y = 3
             pygame.draw.rect(self.screen, BOARD_LINE_COLOR,
                              ((x * CHESS_SIZE + BROAD_MARGE_SPACE - 3, y * CHESS_SIZE + BROAD_MARGE_SPACE - 3), (8, 8)),
                              0)
-            x = 10
-            y = 10
+            x = 3
+            y = 11
+            pygame.draw.rect(self.screen, BOARD_LINE_COLOR,
+                             ((x * CHESS_SIZE + BROAD_MARGE_SPACE - 3, y * CHESS_SIZE + BROAD_MARGE_SPACE - 3), (8, 8)),
+                             0)
+            x = 11
+            y = 11
             pygame.draw.rect(self.screen, BOARD_LINE_COLOR,
                              ((x * CHESS_SIZE + BROAD_MARGE_SPACE - 3, y * CHESS_SIZE + BROAD_MARGE_SPACE - 3), (8, 8)),
                              0)
